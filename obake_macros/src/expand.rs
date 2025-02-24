@@ -267,7 +267,6 @@ impl VersionedItem {
         let versioned_ident = self.versioned_ident();
 
         Ok(quote! {
-            #[doc(hidden)]
             #[allow(non_camel_case_types)]
             #(#attrs)*
             #vis #body
@@ -331,7 +330,6 @@ impl VersionedItem {
         }));
 
         quote! {
-            #[doc(hidden)]
             #(#derives)*
             #[allow(clippy::enum_variant_names)]
             #vis enum #enum_ident {
