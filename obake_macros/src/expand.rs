@@ -409,24 +409,6 @@ impl VersionedItem {
         }
     }
 
-    fn expand_macro_rules(&self) -> TokenStream2 {
-        let ident = self.ident();
-        let rules = self
-            .attrs
-            .versions()
-            .zip(self.expand_variants())
-            .map(|(attr, variant)| {
-                let version = attr.version.to_string();
-                quote!([#version] => { #variant };)
-            });
-
-        quote! {
-            macro_rules! #ident {
-                #(#rules)*
-            }
-        }
-    }
-
     fn expand(&self) -> TokenStream2 {
         try_expand!(self.check_preconditions());
 
@@ -442,7 +424,6 @@ impl VersionedItem {
         let from_impl = self.expand_from_impl(&versions);
         let versioned_impl = self.expand_versioned_impl();
         let version_tagged_impl = self.expand_version_tagged_impl();
-        let macro_rules = self.expand_macro_rules();
 
         quote! {
             #(#defs)*
@@ -451,7 +432,6 @@ impl VersionedItem {
             #from_impl
             #versioned_impl
             #version_tagged_impl
-            #macro_rules
         }
     }
 }
