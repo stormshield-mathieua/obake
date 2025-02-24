@@ -18,6 +18,7 @@ name = "obake"
 
 [dependencies]
 obake_macros = { path = "../obake_macros", version = "1.0" }
+semver = "1.0"
 
 [dev-dependencies]
 trybuild = "1.0"

@@ -245,6 +245,9 @@ impl VersionedItem {
 
     fn expand_version(&self, version: &Version) -> Result<TokenStream2> {
         let current = self.ident();
+        let major = version.major;
+        let minor = version.minor;
+        let patch = version.patch;
         let version_str = &version.to_string();
         let attrs = self.attrs.attrs();
         let vis = &self.vis;
@@ -271,7 +274,8 @@ impl VersionedItem {
 
             #[automatically_derived]
             impl ::obake::VersionOf<#current> for #ident {
-                const VERSION: &'static str = #version_str;
+                const VERSION: ::obake::crates::semver::Version = ::obake::crates::semver::Version::new(#major, #minor, #patch);
+                const VERSION_STR: &'static str = #version_str;
 
                 #[inline]
                 fn try_from_versioned(
@@ -281,7 +285,7 @@ impl VersionedItem {
                     match from {
                         ::obake::AnyVersion::<#current>::#ident(x) => ::core::result::Result::Ok(x),
                         other => ::core::result::Result::Err(::obake::VersionMismatch {
-                            expected: Self::VERSION,
+                            expected: Self::VERSION_STR,
                             found: other.version_str(),
                         }),
                     }
@@ -383,16 +387,24 @@ impl VersionedItem {
     fn expand_version_tagged_impl(&self) -> TokenStream2 {
         let ident = self.ident();
         let enum_ident = self.versioned_ident();
-        let variants = self.expand_variants();
+        let variants = self.expand_variants().collect::<Vec<_>>();
 
         quote! {
             #[automatically_derived]
             impl ::obake::VersionTagged<#ident> for #enum_ident {
                 #[inline]
-                fn version_str(&self) -> &'static str {
+                fn version(&self) -> ::obake::crates::semver::Version {
                     use ::obake::VersionOf;
                     match self {
                         #(#enum_ident::#variants(_) => #variants::VERSION,)*
+                    }
+                }
+
+                #[inline]
+                fn version_str(&self) -> &'static str {
+                    use ::obake::VersionOf;
+                    match self {
+                        #(#enum_ident::#variants(_) => #variants::VERSION_STR,)*
                     }
                 }
             }

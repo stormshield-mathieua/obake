@@ -66,6 +66,12 @@
 #![deny(clippy::all, clippy::pedantic)]
 #![deny(missing_docs, unused_imports)]
 
+// Used by the macro
+#[doc(hidden)]
+pub mod crates {
+    pub use semver;
+}
+
 /// The core macro of the library. Used to declare versioned data-structures.
 ///
 /// ### Supported attributes:
@@ -113,6 +119,8 @@ pub trait Versioned: Sized {
 /// Not intended to be hand-implemented, use [`versioned`] to derive it.
 pub trait VersionTagged<T>: From<T> + Into<T> {
     /// The semantic version number corresponding to the tag of a particular instance.
+    fn version(&self) -> semver::Version;
+    /// The semantic version number as a string corresponding to the tag of a particular instance.
     fn version_str(&self) -> &'static str;
 }
 
@@ -129,13 +137,15 @@ where
     T: Versioned,
 {
     /// The semantic version number of this version.
-    const VERSION: &'static str;
+    const VERSION: semver::Version;
+    /// The semantic version number of this version as a string.
+    const VERSION_STR: &'static str;
 
     /// Trys to convert the version-tagged representation of `T` into this particular version.
     ///
     /// ## Errors
     ///
-    /// If `tagged.version_str() != Self::VERSION`, this conversion will fail and report a
+    /// If `tagged.version_str() != Self::VERSION_STR`, this conversion will fail and report a
     /// corresponding [`VersionMismatch`].
     ///
     /// ```
